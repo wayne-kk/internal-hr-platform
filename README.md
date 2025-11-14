@@ -1,36 +1,169 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 中国五险一金自动计算工具
 
-## Getting Started
+自动计算中国各地区五险一金缴纳金额，支持多维度参数配置。
 
-First, run the development server:
+## 功能特性
+
+- 🧮 **自动计算**：根据工资和城市自动计算五险一金
+- 🏙️ **多城市支持**：支持全国主要城市的配置
+- ⚙️ **灵活配置**：可自定义各险种缴费比例和基数上下限
+- 💾 **数据库存储**：配置保存到 Supabase 数据库
+- 🎨 **现代化UI**：美观的界面设计，支持深色模式
+
+## 技术栈
+
+- **框架**：Next.js 16 (App Router)
+- **UI库**：React 19, Tailwind CSS
+- **动画**：Framer Motion
+- **数据库**：Supabase (PostgreSQL)
+- **ORM**：Prisma
+- **类型安全**：TypeScript
+
+## 快速开始
+
+### 1. 安装依赖
+
+```bash
+npm install
+```
+
+### 2. 配置数据库连接
+
+在 `.env.local` 中添加 Supabase 数据库连接字符串：
+
+```env
+DATABASE_URL="postgresql://postgres:[YOUR-PASSWORD]@db.xxx.supabase.co:5432/postgres"
+```
+
+**如何获取连接字符串和密码：**
+
+1. 登录 [Supabase Dashboard](https://app.supabase.com/)
+2. 选择你的项目
+3. 进入 **Settings** → **Database**
+4. 在 **Connection string** 部分，你可以：
+   - 直接复制 **URI** 格式的连接字符串（已包含密码）
+   - 或者使用 **Connection pooling**（推荐用于服务器端，端口是 6543）
+
+**如果忘记了密码：**
+- 在 **Settings** → **Database** → **Database password** 中点击 **Reset database password** 重置
+
+⚠️ **注意**：不要将包含密码的连接字符串提交到 Git，使用 `.env.local` 文件存储。
+
+### 3. 初始化数据库
+
+使用 Prisma 来管理数据库：
+
+```bash
+# 生成 Prisma Client
+npm run db:generate
+
+# 推送 schema 到数据库（创建表结构）
+npm run db:push
+
+# 或者使用迁移（推荐用于生产环境）
+npm run db:migrate
+
+# 初始化默认数据
+npm run db:seed
+```
+
+### 4. 运行开发服务器
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+打开 [http://localhost:3000](http://localhost:3000) 查看应用。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 项目结构
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+├── src/
+│   ├── app/
+│   │   ├── api/
+│   │   │   └── social-security/    # API 路由
+│   │   ├── config/                 # 配置管理页面
+│   │   └── page.tsx                # 计算工具主页
+│   ├── components/
+│   │   ├── sections/               # 页面组件
+│   │   └── ui/                     # UI 组件
+│   └── lib/
+│       ├── social-security/         # 社保计算核心逻辑
+│       └── prisma.ts               # Prisma 客户端
+├── prisma/
+│   ├── schema.prisma             # Prisma schema 定义
+│   └── seed.ts                   # 数据库种子数据
+└── package.json
+```
 
-## Learn More
+## 使用说明
 
-To learn more about Next.js, take a look at the following resources:
+### 计算工具
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. 访问首页 `/`
+2. 输入工资金额
+3. 选择城市
+4. 点击"计算"查看结果
+5. 可选：在"高级配置"中自定义参数
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 配置管理
 
-## Deploy on Vercel
+1. 访问配置页面 `/config`
+2. 查看所有城市配置列表
+3. 点击编辑按钮修改配置
+4. 或输入新城市名称创建配置
+5. 保存后配置将存储到数据库
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 数据库 Schema
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+使用 Prisma 管理数据库 schema，定义在 `prisma/schema.prisma`。
+
+### SocialSecurityConfig 模型
+
+存储各城市的五险一金配置信息：
+
+- `city`: 城市名称（唯一）
+- `base_lower/base_upper`: 社保缴费基数上下限
+- `housing_fund_base_lower/housing_fund_base_upper`: 公积金缴费基数上下限
+- `*_personal_rate/*_company_rate`: 各险种个人和公司缴费比例
+- `created_at/updated_at`: 创建和更新时间
+- `version`: 配置版本号
+
+### Prisma 命令
+
+```bash
+# 生成 Prisma Client（修改 schema 后必须运行）
+npm run db:generate
+
+# 推送 schema 变更到数据库
+npm run db:push
+
+# 创建并应用迁移
+npm run db:migrate
+
+# 打开 Prisma Studio（数据库可视化工具）
+npm run db:studio
+
+# 初始化默认数据
+npm run db:seed
+```
+
+## 开发
+
+```bash
+# 开发模式
+npm run dev
+
+# 构建
+npm run build
+
+# 启动生产服务器
+npm start
+
+# 代码检查
+npm run lint
+```
+
+## 许可证
+
+MIT
