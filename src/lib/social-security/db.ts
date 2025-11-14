@@ -161,32 +161,7 @@ export async function getAllConfigsFromDB(): Promise<
             },
         })
 
-        return data.map((row: {
-            id: string
-            city: string
-            base_lower: number
-            base_upper: number
-            housing_fund_base_lower: number
-            housing_fund_base_upper: number
-            pension_personal_rate: number
-            pension_company_rate: number
-            medical_personal_rate: number
-            medical_company_rate: number
-            medical_personal_fixed: number | null
-            medical_company_fixed: number | null
-            unemployment_personal_rate: number
-            unemployment_company_rate: number
-            injury_personal_rate: number
-            injury_company_rate: number
-            maternity_personal_rate: number
-            maternity_company_rate: number
-            housing_fund_personal_rate: number
-            housing_fund_company_rate: number
-            housing_fund_protection_enabled: boolean | null
-            created_at: Date
-            updated_at: Date
-            version: number
-        }) => ({
+        return data.map((row) => ({
             id: row.id,
             city: row.city,
             config: {
