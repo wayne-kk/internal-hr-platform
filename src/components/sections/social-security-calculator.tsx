@@ -22,8 +22,9 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { toast } from "sonner"
-import { Calculator as CalculatorIcon, MapPin, DollarSign, TrendingUp, Sparkles } from "lucide-react"
+import { Calculator as CalculatorIcon, MapPin, DollarSign, TrendingUp, Sparkles, PieChart as PieChartIcon, BarChart3 } from "lucide-react"
 import type { CalculationResult } from "@/lib/social-security/types"
+import { PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, BarChart, Bar, type PieLabelRenderProps } from "recharts"
 
 export function Calculator() {
     const [cities, setCities] = useState<string[]>([])
@@ -110,29 +111,111 @@ export function Calculator() {
         return `￥${amount.toFixed(2)}`
     }
 
+    // 准备饼图数据
+    const getPieChartData = () => {
+        if (!result) return []
+        return result.items.map((item) => ({
+            name: item.name,
+            value: item.personal,
+            color: getColorForInsurance(item.key),
+        }))
+    }
+
+    // 准备公司缴纳饼图数据
+    const getCompanyPieChartData = () => {
+        if (!result) return []
+        return result.items.map((item) => ({
+            name: item.name,
+            value: item.company,
+            color: getColorForInsurance(item.key),
+        }))
+    }
+
+    // 获取险种颜色
+    const getColorForInsurance = (key: string) => {
+        const colors: Record<string, string> = {
+            pension: "#3b82f6", // blue
+            medical: "#10b981", // green
+            unemployment: "#f59e0b", // amber
+            injury: "#ef4444", // red
+            maternity: "#8b5cf6", // purple
+            housing_fund: "#ec4899", // pink
+        }
+        return colors[key] || "#6b7280"
+    }
+
+    // 准备折线图数据（不同工资水平下的缴纳趋势）
+    const getLineChartData = () => {
+        if (!result || !selectedCity) return []
+
+        const baseSalary = result.baseSalary
+        const steps = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.5, 3]
+
+        return steps.map((multiplier) => {
+            const salary = baseSalary * multiplier
+            // 简化的计算逻辑（实际应该调用API，这里用比例估算）
+            const personalTotal = (result.personalTotal / baseSalary) * salary
+            const companyTotal = (result.companyTotal / baseSalary) * salary
+            const total = personalTotal + companyTotal
+            const afterTax = salary - personalTotal
+
+            return {
+                salary: Math.round(salary),
+                personal: Math.round(personalTotal),
+                company: Math.round(companyTotal),
+                total: Math.round(total),
+                afterTax: Math.round(afterTax),
+            }
+        })
+    }
+
+    // 准备柱状图数据（各险种对比）
+    const getBarChartData = () => {
+        if (!result) return []
+        return result.items.map((item) => ({
+            name: item.name,
+            个人: item.personal,
+            公司: item.company,
+        }))
+    }
+
+    // 饼图颜色数组
+    const COLORS = [
+        "#3b82f6", // blue
+        "#10b981", // green
+        "#f59e0b", // amber
+        "#ef4444", // red
+        "#8b5cf6", // purple
+        "#ec4899", // pink
+    ]
+
     return (
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-8 sm:gap-10">
             {/* 输入区域 */}
             <motion.div
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.1 }}
+                className="w-full"
             >
-                <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-white/80 via-white/60 to-white/40 backdrop-blur-xl shadow-xl dark:from-gray-900/80 dark:via-gray-900/60 dark:to-gray-900/40">
+                <Card className="relative overflow-hidden border border-blue-200/50 dark:border-blue-800/50 bg-gradient-to-br from-white/90 via-white/80 to-blue-50/30 backdrop-blur-xl shadow-2xl shadow-blue-500/10 dark:from-gray-900/90 dark:via-gray-900/80 dark:to-blue-950/30">
                     <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-indigo-500/5 to-purple-500/5" />
-                    <div className="absolute top-0 right-0 h-32 w-32 rounded-full bg-blue-400/10 blur-3xl" />
-                    <CardHeader className="relative pb-4">
-                        <div className="flex items-center gap-2">
-                            <div className="rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 p-2">
+                    <div className="absolute top-0 right-0 h-40 w-40 rounded-full bg-blue-400/20 blur-3xl animate-pulse" />
+                    <div className="absolute bottom-0 left-0 h-32 w-32 rounded-full bg-indigo-400/10 blur-3xl" />
+                    <CardHeader className="relative pb-6 pt-6 sm:pt-8">
+                        <div className="flex items-center gap-3">
+                            <div className="rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 p-2.5 shadow-lg shadow-blue-500/30">
                                 <CalculatorIcon className="h-5 w-5 text-white" />
                             </div>
-                            <CardTitle className="text-lg sm:text-xl">计算参数</CardTitle>
+                            <div>
+                                <CardTitle className="text-xl sm:text-2xl font-bold">计算参数</CardTitle>
+                                <CardDescription className="text-sm sm:text-base mt-1.5 text-muted-foreground">
+                                    输入工资和选择城市，系统将自动计算五险一金
+                                </CardDescription>
+                            </div>
                         </div>
-                        <CardDescription className="text-xs sm:text-sm mt-2">
-                            输入工资和选择城市，系统将自动计算五险一金
-                        </CardDescription>
                     </CardHeader>
-                    <CardContent className="relative space-y-4 sm:space-y-6">
+                    <CardContent className="relative space-y-5 sm:space-y-6 pb-6 sm:pb-8">
                         <motion.div
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -216,23 +299,26 @@ export function Calculator() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: result ? 1 : 0, y: result ? 0 : 20 }}
                 transition={{ duration: 0.5, delay: 0.2 }}
-                className={result ? "block" : "hidden"}
+                className={result ? "block w-full" : "hidden"}
             >
-                <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-white/80 via-white/60 to-white/40 backdrop-blur-xl shadow-xl dark:from-gray-900/80 dark:via-gray-900/60 dark:to-gray-900/40">
+                <Card className="relative overflow-hidden border border-purple-200/50 dark:border-purple-800/50 bg-gradient-to-br from-white/90 via-white/80 to-purple-50/30 backdrop-blur-xl shadow-2xl shadow-purple-500/10 dark:from-gray-900/90 dark:via-gray-900/80 dark:to-purple-950/30">
                     <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-pink-500/5 to-orange-500/5" />
-                    <div className="absolute bottom-0 left-0 h-32 w-32 rounded-full bg-purple-400/10 blur-3xl" />
-                    <CardHeader className="relative pb-4">
-                        <div className="flex items-center gap-2">
-                            <div className="rounded-lg bg-gradient-to-br from-purple-500 to-pink-600 p-2">
+                    <div className="absolute top-0 left-0 h-40 w-40 rounded-full bg-purple-400/20 blur-3xl animate-pulse" />
+                    <div className="absolute bottom-0 right-0 h-32 w-32 rounded-full bg-pink-400/10 blur-3xl" />
+                    <CardHeader className="relative pb-6 pt-6 sm:pt-8">
+                        <div className="flex items-center gap-3">
+                            <div className="rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 p-2.5 shadow-lg shadow-purple-500/30">
                                 <TrendingUp className="h-5 w-5 text-white" />
                             </div>
-                            <CardTitle className="text-lg sm:text-xl">计算结果</CardTitle>
+                            <div>
+                                <CardTitle className="text-xl sm:text-2xl font-bold">计算结果</CardTitle>
+                                <CardDescription className="text-sm sm:text-base mt-1.5 text-muted-foreground">
+                                    五险一金缴纳明细及合计
+                                </CardDescription>
+                            </div>
                         </div>
-                        <CardDescription className="text-xs sm:text-sm mt-2">
-                            五险一金缴纳明细及合计
-                        </CardDescription>
                     </CardHeader>
-                    <CardContent className="relative">
+                    <CardContent className="relative pb-6 sm:pb-8">
                         <AnimatePresence mode="wait">
                             {result ? (
                                 <motion.div
@@ -240,14 +326,14 @@ export function Calculator() {
                                     animate={{ opacity: 1, scale: 1 }}
                                     exit={{ opacity: 0, scale: 0.95 }}
                                     transition={{ duration: 0.3 }}
-                                    className="space-y-6"
+                                    className="space-y-8 sm:space-y-10"
                                 >
                                     {/* 基本信息 */}
                                     <motion.div
                                         initial={{ opacity: 0, y: 10 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ delay: 0.1 }}
-                                        className="space-y-3 rounded-xl border-2 border-blue-200/50 bg-gradient-to-br from-blue-50/50 to-indigo-50/50 dark:from-blue-950/30 dark:to-indigo-950/30 backdrop-blur-sm p-4 sm:p-5 shadow-sm"
+                                        className="space-y-4 rounded-2xl border border-blue-200/60 dark:border-blue-800/60 bg-gradient-to-br from-blue-50/60 to-indigo-50/60 dark:from-blue-950/40 dark:to-indigo-950/40 backdrop-blur-sm p-5 sm:p-6 shadow-lg"
                                     >
                                         <div className="grid grid-cols-2 gap-3 sm:gap-4">
                                             <div className="space-y-1">
@@ -310,7 +396,7 @@ export function Calculator() {
                                         initial={{ opacity: 0, y: 10 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ delay: 0.2 }}
-                                        className="space-y-2 rounded-xl border border-gray-200/50 dark:border-gray-800/50 bg-white/30 dark:bg-gray-900/30 backdrop-blur-sm overflow-hidden overflow-x-auto"
+                                        className="space-y-3 rounded-2xl border border-gray-200/60 dark:border-gray-800/60 bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm overflow-hidden shadow-lg"
                                     >
                                         <div className="overflow-x-auto">
                                             <Table>
@@ -376,7 +462,7 @@ export function Calculator() {
                                         initial={{ opacity: 0, y: 10 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ delay: 0.4 }}
-                                        className="space-y-4 rounded-xl border-2 border-blue-200/50 dark:border-blue-800/50 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-blue-950/40 dark:via-purple-950/40 dark:to-pink-950/40 backdrop-blur-sm p-4 sm:p-6 shadow-lg"
+                                        className="space-y-5 rounded-2xl border border-blue-200/60 dark:border-blue-800/60 bg-gradient-to-br from-blue-50/60 via-purple-50/60 to-pink-50/60 dark:from-blue-950/40 dark:via-purple-950/40 dark:to-pink-950/40 backdrop-blur-sm p-6 sm:p-8 shadow-xl"
                                     >
                                         <div className="grid grid-cols-2 gap-3 sm:gap-4">
                                             <div className="space-y-1">
@@ -440,6 +526,242 @@ export function Calculator() {
                                                 实际到手 {(result.afterTaxSalary / result.baseSalary * 100).toFixed(2)}%
                                             </div>
                                         </div>
+                                    </motion.div>
+
+                                    {/* 数据可视化 */}
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: 0.5 }}
+                                        className="space-y-8 sm:space-y-10"
+                                    >
+                                        {/* 饼图区域 */}
+                                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
+                                            {/* 个人缴纳饼图 */}
+                                            <motion.div
+                                                initial={{ opacity: 0, scale: 0.9 }}
+                                                animate={{ opacity: 1, scale: 1 }}
+                                                transition={{ delay: 0.6 }}
+                                                className="rounded-2xl border border-blue-200/60 dark:border-blue-800/60 bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm p-5 sm:p-6 shadow-xl"
+                                            >
+                                                <div className="flex items-center gap-3 mb-5">
+                                                    <div className="rounded-lg bg-blue-100 dark:bg-blue-900/30 p-2">
+                                                        <PieChartIcon className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                                                    </div>
+                                                    <h3 className="text-base sm:text-lg font-bold">个人缴纳分布</h3>
+                                                </div>
+                                                <ResponsiveContainer width="100%" height={280}>
+                                                    <PieChart>
+                                                        <Tooltip
+                                                            formatter={(value: number) => formatCurrency(value)}
+                                                            contentStyle={{
+                                                                backgroundColor: "rgba(255, 255, 255, 0.95)",
+                                                                border: "1px solid #e5e7eb",
+                                                                borderRadius: "8px",
+                                                            }}
+                                                        />
+                                                        <Legend
+                                                            wrapperStyle={{ fontSize: "12px" }}
+                                                            formatter={(value) => value}
+                                                        />
+                                                        <Pie
+                                                            data={getPieChartData()}
+                                                            cx="50%"
+                                                            cy="50%"
+                                                            labelLine={false}
+                                                            label={(props: PieLabelRenderProps) => {
+                                                                const { name, percent } = props
+                                                                const percentValue = typeof percent === 'number' ? percent : 0
+                                                                return `${name} ${(percentValue * 100).toFixed(0)}%`
+                                                            }}
+                                                            outerRadius={80}
+                                                            fill="#8884d8"
+                                                            dataKey="value"
+                                                        >
+                                                            {getPieChartData().map((entry, index) => (
+                                                                <Cell key={`cell-${index}`} fill={entry.color} />
+                                                            ))}
+                                                        </Pie>
+                                                    </PieChart>
+                                                </ResponsiveContainer>
+                                            </motion.div>
+
+                                            {/* 公司缴纳饼图 */}
+                                            <motion.div
+                                                initial={{ opacity: 0, scale: 0.9 }}
+                                                animate={{ opacity: 1, scale: 1 }}
+                                                transition={{ delay: 0.7 }}
+                                                className="rounded-2xl border border-purple-200/60 dark:border-purple-800/60 bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm p-5 sm:p-6 shadow-xl"
+                                            >
+                                                <div className="flex items-center gap-3 mb-5">
+                                                    <div className="rounded-lg bg-purple-100 dark:bg-purple-900/30 p-2">
+                                                        <PieChartIcon className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                                                    </div>
+                                                    <h3 className="text-base sm:text-lg font-bold">公司缴纳分布</h3>
+                                                </div>
+                                                <ResponsiveContainer width="100%" height={280}>
+                                                    <PieChart>
+                                                        <Tooltip
+                                                            formatter={(value: number) => formatCurrency(value)}
+                                                            contentStyle={{
+                                                                backgroundColor: "rgba(255, 255, 255, 0.95)",
+                                                                border: "1px solid #e5e7eb",
+                                                                borderRadius: "8px",
+                                                            }}
+                                                        />
+                                                        <Legend
+                                                            wrapperStyle={{ fontSize: "12px" }}
+                                                            formatter={(value) => value}
+                                                        />
+                                                        <Pie
+                                                            data={getCompanyPieChartData()}
+                                                            cx="50%"
+                                                            cy="50%"
+                                                            labelLine={false}
+                                                            label={(props: PieLabelRenderProps) => {
+                                                                const { name, percent } = props
+                                                                const percentValue = typeof percent === 'number' ? percent : 0
+                                                                return `${name} ${(percentValue * 100).toFixed(0)}%`
+                                                            }}
+                                                            outerRadius={80}
+                                                            fill="#8884d8"
+                                                            dataKey="value"
+                                                        >
+                                                            {getCompanyPieChartData().map((entry, index) => (
+                                                                <Cell key={`cell-${index}`} fill={entry.color} />
+                                                            ))}
+                                                        </Pie>
+                                                    </PieChart>
+                                                </ResponsiveContainer>
+                                            </motion.div>
+                                        </div>
+
+                                        {/* 柱状图 - 各险种对比 */}
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: 0.8 }}
+                                            className="rounded-2xl border border-indigo-200/60 dark:border-indigo-800/60 bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm p-5 sm:p-6 shadow-xl"
+                                        >
+                                            <div className="flex items-center gap-3 mb-5">
+                                                <div className="rounded-lg bg-indigo-100 dark:bg-indigo-900/30 p-2">
+                                                    <BarChart3 className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+                                                </div>
+                                                <h3 className="text-base sm:text-lg font-bold">各险种缴纳对比</h3>
+                                            </div>
+                                            <ResponsiveContainer width="100%" height={320}>
+                                                <BarChart data={getBarChartData()} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                                                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                                                    <XAxis
+                                                        dataKey="name"
+                                                        tick={{ fontSize: 12 }}
+                                                        angle={-45}
+                                                        textAnchor="end"
+                                                        height={80}
+                                                    />
+                                                    <YAxis
+                                                        tick={{ fontSize: 12 }}
+                                                        tickFormatter={(value) => `￥${(value / 1000).toFixed(0)}k`}
+                                                    />
+                                                    <Tooltip
+                                                        formatter={(value: number) => formatCurrency(value)}
+                                                        contentStyle={{
+                                                            backgroundColor: "rgba(255, 255, 255, 0.95)",
+                                                            border: "1px solid #e5e7eb",
+                                                            borderRadius: "8px",
+                                                        }}
+                                                    />
+                                                    <Legend wrapperStyle={{ fontSize: "12px" }} />
+                                                    <Bar dataKey="个人" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                                                    <Bar dataKey="公司" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
+                                                </BarChart>
+                                            </ResponsiveContainer>
+                                        </motion.div>
+
+                                        {/* 折线图 - 不同工资水平趋势 */}
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: 0.9 }}
+                                            className="rounded-2xl border border-green-200/60 dark:border-green-800/60 bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm p-5 sm:p-6 shadow-xl"
+                                        >
+                                            <div className="flex items-center gap-3 mb-5">
+                                                <div className="rounded-lg bg-green-100 dark:bg-green-900/30 p-2">
+                                                    <TrendingUp className="h-5 w-5 text-green-600 dark:text-green-400" />
+                                                </div>
+                                                <h3 className="text-base sm:text-lg font-bold">不同工资水平下的缴纳趋势</h3>
+                                            </div>
+                                            <ResponsiveContainer width="100%" height={320}>
+                                                <LineChart data={getLineChartData()} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                                                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                                                    <XAxis
+                                                        dataKey="salary"
+                                                        tick={{ fontSize: 12 }}
+                                                        tickFormatter={(value) => `￥${(value / 1000).toFixed(0)}k`}
+                                                    />
+                                                    <YAxis
+                                                        tick={{ fontSize: 12 }}
+                                                        tickFormatter={(value) => `￥${(value / 1000).toFixed(0)}k`}
+                                                    />
+                                                    <Tooltip
+                                                        formatter={(value: number, name: string) => [
+                                                            formatCurrency(value),
+                                                            name === "personal" ? "个人缴纳" : name === "company" ? "公司缴纳" : name === "total" ? "总缴纳" : "税后工资",
+                                                        ]}
+                                                        labelFormatter={(value) => `工资: ${formatCurrency(value)}`}
+                                                        contentStyle={{
+                                                            backgroundColor: "rgba(255, 255, 255, 0.95)",
+                                                            border: "1px solid #e5e7eb",
+                                                            borderRadius: "8px",
+                                                        }}
+                                                    />
+                                                    <Legend
+                                                        wrapperStyle={{ fontSize: "12px" }}
+                                                        formatter={(value) => {
+                                                            const map: Record<string, string> = {
+                                                                personal: "个人缴纳",
+                                                                company: "公司缴纳",
+                                                                total: "总缴纳",
+                                                                afterTax: "税后工资",
+                                                            }
+                                                            return map[value] || value
+                                                        }}
+                                                    />
+                                                    <Line
+                                                        type="monotone"
+                                                        dataKey="personal"
+                                                        stroke="#3b82f6"
+                                                        strokeWidth={2}
+                                                        dot={{ r: 4 }}
+                                                        name="personal"
+                                                    />
+                                                    <Line
+                                                        type="monotone"
+                                                        dataKey="company"
+                                                        stroke="#8b5cf6"
+                                                        strokeWidth={2}
+                                                        dot={{ r: 4 }}
+                                                        name="company"
+                                                    />
+                                                    <Line
+                                                        type="monotone"
+                                                        dataKey="total"
+                                                        stroke="#ef4444"
+                                                        strokeWidth={2}
+                                                        dot={{ r: 4 }}
+                                                        name="total"
+                                                    />
+                                                    <Line
+                                                        type="monotone"
+                                                        dataKey="afterTax"
+                                                        stroke="#10b981"
+                                                        strokeWidth={2}
+                                                        dot={{ r: 4 }}
+                                                        name="afterTax"
+                                                    />
+                                                </LineChart>
+                                            </ResponsiveContainer>
+                                        </motion.div>
                                     </motion.div>
                                 </motion.div>
                             ) : (

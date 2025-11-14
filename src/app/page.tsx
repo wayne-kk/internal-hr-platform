@@ -16,7 +16,7 @@ export default function Home() {
         <div className="absolute bottom-0 right-1/4 h-96 w-96 rounded-full bg-purple-400/20 blur-3xl animate-pulse delay-1000" />
       </div>
 
-      <div className="relative mx-auto flex w-full max-w-7xl flex-col gap-6 sm:gap-8 px-4 sm:px-6 py-6 sm:py-8">
+      <div className="relative mx-auto flex w-full max-w-7xl flex-col gap-8 sm:gap-12 px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16">
         <SectionHeader
           title="中国五险一金自动计算工具"
           description="自动计算中国各地区五险一金（养老、医疗、失业、工伤、生育、公积金）缴纳金额，支持不同地区、不同险种比例、基数上限/下限等多维度参数配置。适用于人力资源、财务、个人用户等场景。"
