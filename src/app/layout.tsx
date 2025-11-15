@@ -4,6 +4,7 @@ import { ThemeProvider } from "@/components/providers/theme-provider"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Toaster } from "@/components/ui/sonner"
 import { Button } from "@/components/ui/button"
+import { UserMenu } from "@/components/auth/user-menu"
 import "./globals.css"
 
 const geistSans = Geist({
@@ -50,9 +51,7 @@ export default function RootLayout({
                   <Button variant="ghost" size="sm" asChild>
                     <a href="/">计算工具</a>
                   </Button>
-                  <Button variant="ghost" size="sm" asChild>
-                    <a href="/config">配置管理</a>
-                  </Button>
+                  <UserMenu />
                   <ThemeToggle />
                 </div>
               </div>

@@ -1,8 +1,40 @@
 import { PrismaClient } from "@prisma/client"
+import bcrypt from "bcryptjs"
 
 const prisma = new PrismaClient()
 
 async function main() {
+    // 创建默认超级管理员账户
+    const adminPassword = await bcrypt.hash("admin123", 10)
+    const admin = await prisma.user.upsert({
+        where: { username: "admin" },
+        update: {},
+        create: {
+            username: "admin",
+            password: adminPassword,
+            role: "admin",
+            name: "系统管理员",
+            email: "admin@example.com",
+            is_active: true,
+        },
+    })
+    console.log("✅ 创建默认管理员账户:", admin.username)
+
+    // 创建测试用户账户
+    const userPassword = await bcrypt.hash("user123", 10)
+    const user = await prisma.user.upsert({
+        where: { username: "user" },
+        update: {},
+        create: {
+            username: "user",
+            password: userPassword,
+            role: "user",
+            name: "测试用户",
+            email: "user@example.com",
+            is_active: true,
+        },
+    })
+    console.log("✅ 创建测试用户账户:", user.username)
     console.log("开始初始化默认数据...")
 
     const defaultConfigs = [

@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { toast } from "sonner"
 import { Settings, Plus, Save, RefreshCw, Trash2, Edit2, Shield } from "lucide-react"
 import { SectionHeader } from "@/components/layout/section-header"
+import { AdminGuard } from "@/components/auth/admin-guard"
 import type { CityConfig } from "@/lib/social-security/types"
 
 interface ConfigItem {
@@ -22,7 +23,7 @@ interface ConfigItem {
     version: number
 }
 
-export default function ConfigPage() {
+function ConfigPageContent() {
     const [configs, setConfigs] = useState<ConfigItem[]>([])
     const [loading, setLoading] = useState(false)
     const [editingCity, setEditingCity] = useState<string | null>(null)
@@ -705,6 +706,14 @@ export default function ConfigPage() {
                 </div>
             </div>
         </div>
+    )
+}
+
+export default function ConfigPage() {
+    return (
+        <AdminGuard>
+            <ConfigPageContent />
+        </AdminGuard>
     )
 }
 

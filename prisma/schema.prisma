@@ -51,3 +51,23 @@ model SocialSecurityConfig {
   @@index([is_active])
   @@map("social_security_config")
 }
+
+model User {
+  id        String   @id @default(uuid())
+  username  String   @unique
+  email     String?  @unique
+  password  String   // bcrypt hashed password
+  role      String   @default("user") // "user" or "admin"
+  name      String?
+  avatar    String?
+  is_active Boolean  @default(true)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  last_login DateTime?
+
+  @@index([username])
+  @@index([email])
+  @@index([role])
+  @@index([is_active])
+  @@map("users")
+}
