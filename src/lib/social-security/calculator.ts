@@ -47,23 +47,47 @@ export async function calculateSocialSecurity(
 
     // 验证配置的有效性
     if (config.base_lower >= config.base_upper) {
-        return null // 社保下限必须小于上限
+        return null // 社保下限必须小于上限（向后兼容）
     }
     if (config.housing_fund_base_lower >= config.housing_fund_base_upper) {
-        return null // 公积金下限必须小于上限
+        return null // 公积金下限必须小于上限（向后兼容）
     }
+    // 验证各险种的上下限
+    if (config.pension.base_lower >= config.pension.base_upper) return null
+    if (config.medical.base_lower >= config.medical.base_upper) return null
+    if (config.unemployment.base_lower >= config.unemployment.base_upper) return null
+    if (config.injury.base_lower >= config.injury.base_upper) return null
+    if (config.maternity.base_lower >= config.maternity.base_upper) return null
+    if (config.housing_fund.base_lower >= config.housing_fund.base_upper) return null
 
-    // 计算社保实际缴费基数（限制在上下限范围内）
-    const actualBase = Math.max(
-        config.base_lower,
-        Math.min(salary, config.base_upper)
+    // 计算各险种的实际缴费基数（每个险种使用自己的上下限）
+    const pensionActualBase = Math.max(
+        config.pension.base_lower,
+        Math.min(salary, config.pension.base_upper)
     )
-
-    // 计算公积金实际缴费基数（独立计算，限制在公积金上下限范围内）
+    const medicalActualBase = Math.max(
+        config.medical.base_lower,
+        Math.min(salary, config.medical.base_upper)
+    )
+    const unemploymentActualBase = Math.max(
+        config.unemployment.base_lower,
+        Math.min(salary, config.unemployment.base_upper)
+    )
+    const injuryActualBase = Math.max(
+        config.injury.base_lower,
+        Math.min(salary, config.injury.base_upper)
+    )
+    const maternityActualBase = Math.max(
+        config.maternity.base_lower,
+        Math.min(salary, config.maternity.base_upper)
+    )
     const housingFundActualBase = Math.max(
-        config.housing_fund_base_lower,
-        Math.min(salary, config.housing_fund_base_upper)
+        config.housing_fund.base_lower,
+        Math.min(salary, config.housing_fund.base_upper)
     )
+
+    // 计算社保实际缴费基数（向后兼容，使用统一基数的平均值作为显示）
+    const actualBase = pensionActualBase // 使用养老保险基数作为代表
 
     // 计算公积金（支持保护规则）
     const protectionEnabled = config.housing_fund_protection_enabled ?? false
@@ -72,73 +96,73 @@ export async function calculateSocialSecurity(
 
     if (protectionEnabled) {
         // 启用保护规则
-        const baseLower = config.housing_fund_base_lower
+        const baseLower = config.housing_fund.base_lower
         const personalRate = config.housing_fund.personal_rate
         const companyRate = config.housing_fund.company_rate
 
         if (salary <= baseLower) {
             // 规则1：工资 <= 下限，个人不缴，公司按下限缴
             housingFundPersonal = 0
-            housingFundCompany = Math.round(baseLower * companyRate * 100) / 100
+            housingFundCompany = Math.round(baseLower * companyRate)
         } else {
             const normalPersonal = salary * personalRate
             const afterDeduction = salary - normalPersonal
 
             if (afterDeduction < baseLower) {
                 // 规则2：扣完后低于下限，个人限额缴（工资 - 下限），公司按工资缴
-                housingFundPersonal = Math.round((salary - baseLower) * 100) / 100
-                housingFundCompany = Math.round(salary * companyRate * 100) / 100
+                housingFundPersonal = Math.round((salary - baseLower))
+                housingFundCompany = Math.round(salary * companyRate)
             } else {
                 // 规则3：正常计算
-                housingFundPersonal = Math.round(normalPersonal * 100) / 100
-                housingFundCompany = Math.round(salary * companyRate * 100) / 100
+                housingFundPersonal = Math.round(normalPersonal)
+                housingFundCompany = Math.round(salary * companyRate)
             }
         }
     } else {
         // 不启用保护规则，正常计算
-        housingFundPersonal = Math.round(housingFundActualBase * config.housing_fund.personal_rate * 100) / 100
-        housingFundCompany = Math.round(housingFundActualBase * config.housing_fund.company_rate * 100) / 100
+        housingFundPersonal = Math.round(housingFundActualBase * config.housing_fund.personal_rate)
+        housingFundCompany = Math.round(housingFundActualBase * config.housing_fund.company_rate)
     }
 
-    // 计算各险种（五险使用社保基数，公积金使用公积金基数）
+    // 计算各险种（每个险种使用自己的缴费基数）
     const items = [
         {
             name: INSURANCE_NAMES.pension,
             key: "pension",
-            personal: Math.round(actualBase * config.pension.personal_rate * 100) / 100,
-            company: Math.round(actualBase * config.pension.company_rate * 100) / 100,
+            personal: Math.round(pensionActualBase * config.pension.personal_rate * 100) / 100,
+            company: Math.round(pensionActualBase * config.pension.company_rate * 100) / 100,
             personalRate: config.pension.personal_rate,
             companyRate: config.pension.company_rate,
         },
         {
             name: INSURANCE_NAMES.medical,
             key: "medical",
-            personal: Math.round((actualBase * config.medical.personal_rate + (config.medical.personal_fixed || 0)) * 100) / 100,
-            company: Math.round(actualBase * config.medical.company_rate * 100) / 100,
+            personal: Math.round((medicalActualBase * config.medical.personal_rate + (config.medical.personal_fixed || 0)) * 100) / 100,
+            company: Math.round((medicalActualBase * config.medical.company_rate + (config.medical.company_fixed || 0)) * 100) / 100,
             personalRate: config.medical.personal_rate,
             companyRate: config.medical.company_rate,
         },
         {
             name: INSURANCE_NAMES.unemployment,
             key: "unemployment",
-            personal: Math.round(actualBase * config.unemployment.personal_rate * 100) / 100,
-            company: Math.round(actualBase * config.unemployment.company_rate * 100) / 100,
+            personal: Math.round(unemploymentActualBase * config.unemployment.personal_rate * 100) / 100,
+            company: Math.round(unemploymentActualBase * config.unemployment.company_rate * 100) / 100,
             personalRate: config.unemployment.personal_rate,
             companyRate: config.unemployment.company_rate,
         },
         {
             name: INSURANCE_NAMES.injury,
             key: "injury",
-            personal: Math.round(actualBase * config.injury.personal_rate * 100) / 100,
-            company: Math.round(actualBase * config.injury.company_rate * 100) / 100,
+            personal: Math.round(injuryActualBase * config.injury.personal_rate * 100) / 100,
+            company: Math.round(injuryActualBase * config.injury.company_rate * 100) / 100,
             personalRate: config.injury.personal_rate,
             companyRate: config.injury.company_rate,
         },
         {
             name: INSURANCE_NAMES.maternity,
             key: "maternity",
-            personal: Math.round(actualBase * config.maternity.personal_rate * 100) / 100,
-            company: Math.round(actualBase * config.maternity.company_rate * 100) / 100,
+            personal: Math.round(maternityActualBase * config.maternity.personal_rate * 100) / 100,
+            company: Math.round(maternityActualBase * config.maternity.company_rate * 100) / 100,
             personalRate: config.maternity.personal_rate,
             companyRate: config.maternity.company_rate,
         },
@@ -171,8 +195,8 @@ export async function calculateSocialSecurity(
         baseLower: config.base_lower,
         baseUpper: config.base_upper,
         housingFundActualBase,
-        housingFundBaseLower: config.housing_fund_base_lower,
-        housingFundBaseUpper: config.housing_fund_base_upper,
+        housingFundBaseLower: config.housing_fund.base_lower,
+        housingFundBaseUpper: config.housing_fund.base_upper,
         items,
         personalTotal,
         companyTotal,

@@ -20,23 +20,35 @@ model SocialSecurityConfig {
   // 养老保险
   pension_personal_rate      Decimal  @default(0.08) @db.Decimal(5, 4)
   pension_company_rate      Decimal  @default(0.16) @db.Decimal(5, 4)
+  pension_base_lower        Decimal  @default(3000) @db.Decimal(10, 2)
+  pension_base_upper        Decimal  @default(30000) @db.Decimal(10, 2)
   // 医疗保险
   medical_personal_rate      Decimal  @default(0.02) @db.Decimal(5, 4)
   medical_company_rate       Decimal  @default(0.10) @db.Decimal(5, 4)
   medical_personal_fixed      Decimal  @default(0) @db.Decimal(10, 2) // 个人固定金额（元）
   medical_company_fixed       Decimal  @default(0) @db.Decimal(10, 2) // 公司固定金额（元）
+  medical_base_lower        Decimal  @default(3000) @db.Decimal(10, 2)
+  medical_base_upper        Decimal  @default(30000) @db.Decimal(10, 2)
   // 失业保险
   unemployment_personal_rate Decimal  @default(0.002) @db.Decimal(5, 4)
   unemployment_company_rate  Decimal  @default(0.008) @db.Decimal(5, 4)
+  unemployment_base_lower   Decimal  @default(3000) @db.Decimal(10, 2)
+  unemployment_base_upper   Decimal  @default(30000) @db.Decimal(10, 2)
   // 工伤保险
   injury_personal_rate       Decimal  @default(0) @db.Decimal(5, 4)
   injury_company_rate        Decimal  @default(0.004) @db.Decimal(5, 4)
+  injury_base_lower         Decimal  @default(3000) @db.Decimal(10, 2)
+  injury_base_upper         Decimal  @default(30000) @db.Decimal(10, 2)
   // 生育保险
   maternity_personal_rate    Decimal  @default(0) @db.Decimal(5, 4)
   maternity_company_rate     Decimal  @default(0.008) @db.Decimal(5, 4)
+  maternity_base_lower      Decimal  @default(3000) @db.Decimal(10, 2)
+  maternity_base_upper      Decimal  @default(30000) @db.Decimal(10, 2)
   // 住房公积金
   housing_fund_personal_rate Decimal  @default(0.12) @db.Decimal(5, 4)
   housing_fund_company_rate  Decimal  @default(0.12) @db.Decimal(5, 4)
+  housing_fund_base_lower_new Decimal  @default(2000) @db.Decimal(10, 2) // 新字段
+  housing_fund_base_upper_new Decimal  @default(30000) @db.Decimal(10, 2) // 新字段
   // 公积金保护规则：是否启用低收入保护（工资低于下限时个人不缴，扣完后低于下限时限额缴）
   housing_fund_protection_enabled Boolean @default(false)
   // 元数据

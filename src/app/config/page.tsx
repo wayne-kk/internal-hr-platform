@@ -70,12 +70,12 @@ function ConfigPageContent() {
             base_upper: 30000,
             housing_fund_base_lower: 2000,
             housing_fund_base_upper: 30000,
-            pension: { personal_rate: 0.08, company_rate: 0.16 },
-            medical: { personal_rate: 0.02, company_rate: 0.10, personal_fixed: 0 },
-            unemployment: { personal_rate: 0.002, company_rate: 0.008 },
-            injury: { personal_rate: 0, company_rate: 0.004 },
-            maternity: { personal_rate: 0, company_rate: 0.008 },
-            housing_fund: { personal_rate: 0.12, company_rate: 0.12 },
+            pension: { personal_rate: 0.08, company_rate: 0.16, base_lower: 3000, base_upper: 30000 },
+            medical: { personal_rate: 0.02, company_rate: 0.10, personal_fixed: 0, company_fixed: 0, base_lower: 3000, base_upper: 30000 },
+            unemployment: { personal_rate: 0.002, company_rate: 0.008, base_lower: 3000, base_upper: 30000 },
+            injury: { personal_rate: 0, company_rate: 0.004, base_lower: 3000, base_upper: 30000 },
+            maternity: { personal_rate: 0, company_rate: 0.008, base_lower: 3000, base_upper: 30000 },
+            housing_fund: { personal_rate: 0.12, company_rate: 0.12, base_lower: 2000, base_upper: 30000 },
             housing_fund_protection_enabled: false,
         })
         setNewCity("")
@@ -93,6 +93,31 @@ function ConfigPageContent() {
             return
         }
         if (formData.housing_fund_base_lower >= formData.housing_fund_base_upper) {
+            toast.error("公积金缴费基数下限必须小于上限")
+            return
+        }
+        // 验证各险种的上下限
+        if (formData.pension.base_lower >= formData.pension.base_upper) {
+            toast.error("养老保险缴费基数下限必须小于上限")
+            return
+        }
+        if (formData.medical.base_lower >= formData.medical.base_upper) {
+            toast.error("医疗保险缴费基数下限必须小于上限")
+            return
+        }
+        if (formData.unemployment.base_lower >= formData.unemployment.base_upper) {
+            toast.error("失业保险缴费基数下限必须小于上限")
+            return
+        }
+        if (formData.injury.base_lower >= formData.injury.base_upper) {
+            toast.error("工伤保险缴费基数下限必须小于上限")
+            return
+        }
+        if (formData.maternity.base_lower >= formData.maternity.base_upper) {
+            toast.error("生育保险缴费基数下限必须小于上限")
+            return
+        }
+        if (formData.housing_fund.base_lower >= formData.housing_fund.base_upper) {
             toast.error("公积金缴费基数下限必须小于上限")
             return
         }
@@ -251,96 +276,8 @@ function ConfigPageContent() {
                                     <CardDescription>修改五险一金参数</CardDescription>
                                 </CardHeader>
                                 <CardContent className="relative space-y-6 max-h-[calc(100vh-250px)] overflow-y-auto">
-                                    {/* 基数配置 */}
+                                    {/* 规则配置 */}
                                     <div className="space-y-4">
-                                        <div className="space-y-3">
-                                            <Label className="text-sm font-semibold">社保缴费基数范围</Label>
-                                            <div className="grid grid-cols-2 gap-3">
-                                                <div className="space-y-1">
-                                                    <Label className="text-xs">下限（元）</Label>
-                                                    <Input
-                                                        type="number"
-                                                        value={formData.base_lower}
-                                                        onChange={(e) => {
-                                                            const value = parseFloat(e.target.value)
-                                                            if (!isNaN(value) && value >= 0) {
-                                                                setFormData({
-                                                                    ...formData,
-                                                                    base_lower: value,
-                                                                })
-                                                            }
-                                                        }}
-                                                        className="h-9 text-sm"
-                                                        min="0"
-                                                        step="1"
-                                                    />
-                                                </div>
-                                                <div className="space-y-1">
-                                                    <Label className="text-xs">上限（元）</Label>
-                                                    <Input
-                                                        type="number"
-                                                        value={formData.base_upper}
-                                                        onChange={(e) => {
-                                                            const value = parseFloat(e.target.value)
-                                                            if (!isNaN(value) && value >= 0) {
-                                                                setFormData({
-                                                                    ...formData,
-                                                                    base_upper: value,
-                                                                })
-                                                            }
-                                                        }}
-                                                        className="h-9 text-sm"
-                                                        min="0"
-                                                        step="1"
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="space-y-3">
-                                            <Label className="text-sm font-semibold">公积金缴费基数范围</Label>
-                                            <div className="grid grid-cols-2 gap-3">
-                                                <div className="space-y-1">
-                                                    <Label className="text-xs">下限（元）</Label>
-                                                    <Input
-                                                        type="number"
-                                                        value={formData.housing_fund_base_lower}
-                                                        onChange={(e) => {
-                                                            const value = parseFloat(e.target.value)
-                                                            if (!isNaN(value) && value >= 0) {
-                                                                setFormData({
-                                                                    ...formData,
-                                                                    housing_fund_base_lower: value,
-                                                                })
-                                                            }
-                                                        }}
-                                                        className="h-9 text-sm"
-                                                        min="0"
-                                                        step="1"
-                                                    />
-                                                </div>
-                                                <div className="space-y-1">
-                                                    <Label className="text-xs">上限（元）</Label>
-                                                    <Input
-                                                        type="number"
-                                                        value={formData.housing_fund_base_upper}
-                                                        onChange={(e) => {
-                                                            const value = parseFloat(e.target.value)
-                                                            if (!isNaN(value) && value >= 0) {
-                                                                setFormData({
-                                                                    ...formData,
-                                                                    housing_fund_base_upper: value,
-                                                                })
-                                                            }
-                                                        }}
-                                                        className="h-9 text-sm"
-                                                        min="0"
-                                                        step="1"
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-
                                         <div className="space-y-3 rounded-lg border-2 border-blue-200/50 dark:border-blue-800/50 bg-gradient-to-br from-blue-50/50 to-indigo-50/30 dark:from-blue-950/20 dark:to-indigo-950/20 p-4">
                                             <div className="flex items-start justify-between gap-4">
                                                 <div className="flex-1 space-y-2">
@@ -377,61 +314,150 @@ function ConfigPageContent() {
 
                                     {/* 险种比例配置 */}
                                     <div className="space-y-3">
-                                        <Label className="text-sm font-semibold">各险种缴费比例（%）</Label>
+                                        <Label className="text-sm font-semibold">各险种缴费比例与上下限</Label>
                                         <Tabs defaultValue="pension" className="w-full">
-                                            <TabsList className="grid w-full grid-cols-3 h-auto p-1">
-                                                <TabsTrigger value="pension" className="text-xs">养老</TabsTrigger>
-                                                <TabsTrigger value="medical" className="text-xs">医疗</TabsTrigger>
-                                                <TabsTrigger value="unemployment" className="text-xs">失业</TabsTrigger>
-                                                <TabsTrigger value="injury" className="text-xs">工伤</TabsTrigger>
-                                                <TabsTrigger value="maternity" className="text-xs">生育</TabsTrigger>
-                                                <TabsTrigger value="housing_fund" className="text-xs">公积金</TabsTrigger>
+                                            <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 h-auto p-1 gap-1">
+                                                <TabsTrigger value="pension" className="text-xs px-2 py-1.5">养老</TabsTrigger>
+                                                <TabsTrigger value="medical" className="text-xs px-2 py-1.5">医疗</TabsTrigger>
+                                                <TabsTrigger value="unemployment" className="text-xs px-2 py-1.5">失业</TabsTrigger>
+                                                <TabsTrigger value="injury" className="text-xs px-2 py-1.5">工伤</TabsTrigger>
+                                                <TabsTrigger value="maternity" className="text-xs px-2 py-1.5">生育</TabsTrigger>
+                                                <TabsTrigger value="housing_fund" className="text-xs px-2 py-1.5">公积金</TabsTrigger>
                                             </TabsList>
                                             <TabsContent value="pension" className="space-y-2 mt-3">
-                                                <div className="grid grid-cols-2 gap-2">
-                                                    <div className="space-y-1">
-                                                        <Label className="text-xs">个人比例（%）</Label>
-                                                        <Input
-                                                            type="number"
-                                                            value={(formData.pension.personal_rate * 100).toFixed(2)}
-                                                            onChange={(e) => {
-                                                                const value = parseFloat(e.target.value) / 100
-                                                                if (!isNaN(value) && value >= 0 && value <= 1) {
-                                                                    setFormData({
-                                                                        ...formData,
-                                                                        pension: { ...formData.pension, personal_rate: value },
-                                                                    })
-                                                                }
-                                                            }}
-                                                            className="h-9 text-sm"
-                                                            min="0"
-                                                            max="100"
-                                                            step="0.01"
-                                                        />
+                                                <div className="space-y-3">
+                                                    <Label className="text-xs font-semibold text-blue-600 dark:text-blue-400">缴费基数范围（元）</Label>
+                                                    <div className="grid grid-cols-2 gap-2">
+                                                        <div className="space-y-1">
+                                                            <Label className="text-xs">下限</Label>
+                                                            <Input
+                                                                type="number"
+                                                                value={formData.pension.base_lower}
+                                                                onChange={(e) => {
+                                                                    const value = parseFloat(e.target.value)
+                                                                    if (!isNaN(value) && value >= 0) {
+                                                                        setFormData({
+                                                                            ...formData,
+                                                                            pension: { ...formData.pension, base_lower: value },
+                                                                        })
+                                                                    }
+                                                                }}
+                                                                className="h-9 text-sm"
+                                                                min="0"
+                                                                step="1"
+                                                            />
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <Label className="text-xs">上限</Label>
+                                                            <Input
+                                                                type="number"
+                                                                value={formData.pension.base_upper}
+                                                                onChange={(e) => {
+                                                                    const value = parseFloat(e.target.value)
+                                                                    if (!isNaN(value) && value >= 0) {
+                                                                        setFormData({
+                                                                            ...formData,
+                                                                            pension: { ...formData.pension, base_upper: value },
+                                                                        })
+                                                                    }
+                                                                }}
+                                                                className="h-9 text-sm"
+                                                                min="0"
+                                                                step="1"
+                                                            />
+                                                        </div>
                                                     </div>
-                                                    <div className="space-y-1">
-                                                        <Label className="text-xs">公司比例（%）</Label>
-                                                        <Input
-                                                            type="number"
-                                                            value={(formData.pension.company_rate * 100).toFixed(2)}
-                                                            onChange={(e) => {
-                                                                const value = parseFloat(e.target.value) / 100
-                                                                if (!isNaN(value) && value >= 0 && value <= 1) {
-                                                                    setFormData({
-                                                                        ...formData,
-                                                                        pension: { ...formData.pension, company_rate: value },
-                                                                    })
-                                                                }
-                                                            }}
-                                                            className="h-9 text-sm"
-                                                            min="0"
-                                                            max="100"
-                                                            step="0.01"
-                                                        />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label className="text-xs font-semibold text-blue-600 dark:text-blue-400">缴费比例（%）</Label>
+                                                    <div className="grid grid-cols-2 gap-2">
+                                                        <div className="space-y-1">
+                                                            <Label className="text-xs">个人比例</Label>
+                                                            <Input
+                                                                type="number"
+                                                                value={(formData.pension.personal_rate * 100).toFixed(2)}
+                                                                onChange={(e) => {
+                                                                    const value = parseFloat(e.target.value) / 100
+                                                                    if (!isNaN(value) && value >= 0 && value <= 1) {
+                                                                        setFormData({
+                                                                            ...formData,
+                                                                            pension: { ...formData.pension, personal_rate: value },
+                                                                        })
+                                                                    }
+                                                                }}
+                                                                className="h-9 text-sm"
+                                                                min="0"
+                                                                max="100"
+                                                                step="0.01"
+                                                            />
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <Label className="text-xs">公司比例</Label>
+                                                            <Input
+                                                                type="number"
+                                                                value={(formData.pension.company_rate * 100).toFixed(2)}
+                                                                onChange={(e) => {
+                                                                    const value = parseFloat(e.target.value) / 100
+                                                                    if (!isNaN(value) && value >= 0 && value <= 1) {
+                                                                        setFormData({
+                                                                            ...formData,
+                                                                            pension: { ...formData.pension, company_rate: value },
+                                                                        })
+                                                                    }
+                                                                }}
+                                                                className="h-9 text-sm"
+                                                                min="0"
+                                                                max="100"
+                                                                step="0.01"
+                                                            />
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </TabsContent>
                                             <TabsContent value="medical" className="space-y-3 mt-3">
+                                                <div className="space-y-2">
+                                                    <Label className="text-xs font-semibold text-blue-600 dark:text-blue-400">缴费基数范围（元）</Label>
+                                                    <div className="grid grid-cols-2 gap-2">
+                                                        <div className="space-y-1">
+                                                            <Label className="text-xs">下限</Label>
+                                                            <Input
+                                                                type="number"
+                                                                value={formData.medical.base_lower}
+                                                                onChange={(e) => {
+                                                                    const value = parseFloat(e.target.value)
+                                                                    if (!isNaN(value) && value >= 0) {
+                                                                        setFormData({
+                                                                            ...formData,
+                                                                            medical: { ...formData.medical, base_lower: value },
+                                                                        })
+                                                                    }
+                                                                }}
+                                                                className="h-9 text-sm"
+                                                                min="0"
+                                                                step="1"
+                                                            />
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <Label className="text-xs">上限</Label>
+                                                            <Input
+                                                                type="number"
+                                                                value={formData.medical.base_upper}
+                                                                onChange={(e) => {
+                                                                    const value = parseFloat(e.target.value)
+                                                                    if (!isNaN(value) && value >= 0) {
+                                                                        setFormData({
+                                                                            ...formData,
+                                                                            medical: { ...formData.medical, base_upper: value },
+                                                                        })
+                                                                    }
+                                                                }}
+                                                                className="h-9 text-sm"
+                                                                min="0"
+                                                                step="1"
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </div>
                                                 <div className="space-y-2">
                                                     <Label className="text-xs font-semibold text-blue-600 dark:text-blue-400">缴费比例（%）</Label>
                                                     <div className="grid grid-cols-2 gap-2">
@@ -478,203 +504,409 @@ function ConfigPageContent() {
                                                     </div>
                                                 </div>
                                                 <div className="space-y-2 rounded-lg border border-blue-200/50 dark:border-blue-800/50 bg-blue-50/30 dark:bg-blue-950/20 p-3">
-                                                    <Label className="text-xs font-semibold text-blue-600 dark:text-blue-400">个人固定金额（元）</Label>
-                                                    <p className="text-xs text-muted-foreground mb-2">医疗保险个人部分支持比例+固定金额同时生效，公司部分仅按比例计算</p>
-                                                    <div className="space-y-1">
-                                                        <Label className="text-xs">个人固定金额</Label>
-                                                        <Input
-                                                            type="number"
-                                                            value={formData.medical.personal_fixed || 0}
-                                                            onChange={(e) => {
-                                                                const value = parseFloat(e.target.value)
-                                                                if (!isNaN(value) && value >= 0) {
-                                                                    setFormData({
-                                                                        ...formData,
-                                                                        medical: { ...formData.medical, personal_fixed: value },
-                                                                    })
-                                                                }
-                                                            }}
-                                                            className="h-9 text-sm"
-                                                            min="0"
-                                                            step="0.01"
-                                                            placeholder="0"
-                                                        />
+                                                    <Label className="text-xs font-semibold text-blue-600 dark:text-blue-400">固定金额（元）</Label>
+                                                    <p className="text-xs text-muted-foreground mb-2">医疗保险支持比例+固定金额同时生效，个人和公司部分都可以设置固定金额</p>
+                                                    <div className="grid grid-cols-2 gap-2">
+                                                        <div className="space-y-1">
+                                                            <Label className="text-xs">个人固定金额</Label>
+                                                            <Input
+                                                                type="number"
+                                                                value={formData.medical.personal_fixed || 0}
+                                                                onChange={(e) => {
+                                                                    const value = parseFloat(e.target.value)
+                                                                    if (!isNaN(value) && value >= 0) {
+                                                                        setFormData({
+                                                                            ...formData,
+                                                                            medical: { ...formData.medical, personal_fixed: value },
+                                                                        })
+                                                                    }
+                                                                }}
+                                                                className="h-9 text-sm"
+                                                                min="0"
+                                                                step="0.01"
+                                                                placeholder="0"
+                                                            />
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <Label className="text-xs">公司固定金额</Label>
+                                                            <Input
+                                                                type="number"
+                                                                value={formData.medical.company_fixed || 0}
+                                                                onChange={(e) => {
+                                                                    const value = parseFloat(e.target.value)
+                                                                    if (!isNaN(value) && value >= 0) {
+                                                                        setFormData({
+                                                                            ...formData,
+                                                                            medical: { ...formData.medical, company_fixed: value },
+                                                                        })
+                                                                    }
+                                                                }}
+                                                                className="h-9 text-sm"
+                                                                min="0"
+                                                                step="0.01"
+                                                                placeholder="0"
+                                                            />
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </TabsContent>
                                             <TabsContent value="unemployment" className="space-y-2 mt-3">
-                                                <div className="grid grid-cols-2 gap-2">
-                                                    <div className="space-y-1">
-                                                        <Label className="text-xs">个人比例（%）</Label>
-                                                        <Input
-                                                            type="number"
-                                                            value={(formData.unemployment.personal_rate * 100).toFixed(2)}
-                                                            onChange={(e) => {
-                                                                const value = parseFloat(e.target.value) / 100
-                                                                if (!isNaN(value) && value >= 0 && value <= 1) {
-                                                                    setFormData({
-                                                                        ...formData,
-                                                                        unemployment: { ...formData.unemployment, personal_rate: value },
-                                                                    })
-                                                                }
-                                                            }}
-                                                            className="h-9 text-sm"
-                                                            min="0"
-                                                            max="100"
-                                                            step="0.01"
-                                                        />
+                                                <div className="space-y-3">
+                                                    <Label className="text-xs font-semibold text-blue-600 dark:text-blue-400">缴费基数范围（元）</Label>
+                                                    <div className="grid grid-cols-2 gap-2">
+                                                        <div className="space-y-1">
+                                                            <Label className="text-xs">下限</Label>
+                                                            <Input
+                                                                type="number"
+                                                                value={formData.unemployment.base_lower}
+                                                                onChange={(e) => {
+                                                                    const value = parseFloat(e.target.value)
+                                                                    if (!isNaN(value) && value >= 0) {
+                                                                        setFormData({
+                                                                            ...formData,
+                                                                            unemployment: { ...formData.unemployment, base_lower: value },
+                                                                        })
+                                                                    }
+                                                                }}
+                                                                className="h-9 text-sm"
+                                                                min="0"
+                                                                step="1"
+                                                            />
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <Label className="text-xs">上限</Label>
+                                                            <Input
+                                                                type="number"
+                                                                value={formData.unemployment.base_upper}
+                                                                onChange={(e) => {
+                                                                    const value = parseFloat(e.target.value)
+                                                                    if (!isNaN(value) && value >= 0) {
+                                                                        setFormData({
+                                                                            ...formData,
+                                                                            unemployment: { ...formData.unemployment, base_upper: value },
+                                                                        })
+                                                                    }
+                                                                }}
+                                                                className="h-9 text-sm"
+                                                                min="0"
+                                                                step="1"
+                                                            />
+                                                        </div>
                                                     </div>
-                                                    <div className="space-y-1">
-                                                        <Label className="text-xs">公司比例（%）</Label>
-                                                        <Input
-                                                            type="number"
-                                                            value={(formData.unemployment.company_rate * 100).toFixed(2)}
-                                                            onChange={(e) => {
-                                                                const value = parseFloat(e.target.value) / 100
-                                                                if (!isNaN(value) && value >= 0 && value <= 1) {
-                                                                    setFormData({
-                                                                        ...formData,
-                                                                        unemployment: { ...formData.unemployment, company_rate: value },
-                                                                    })
-                                                                }
-                                                            }}
-                                                            className="h-9 text-sm"
-                                                            min="0"
-                                                            max="100"
-                                                            step="0.01"
-                                                        />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label className="text-xs font-semibold text-blue-600 dark:text-blue-400">缴费比例（%）</Label>
+                                                    <div className="grid grid-cols-2 gap-2">
+                                                        <div className="space-y-1">
+                                                            <Label className="text-xs">个人比例</Label>
+                                                            <Input
+                                                                type="number"
+                                                                value={(formData.unemployment.personal_rate * 100).toFixed(2)}
+                                                                onChange={(e) => {
+                                                                    const value = parseFloat(e.target.value) / 100
+                                                                    if (!isNaN(value) && value >= 0 && value <= 1) {
+                                                                        setFormData({
+                                                                            ...formData,
+                                                                            unemployment: { ...formData.unemployment, personal_rate: value },
+                                                                        })
+                                                                    }
+                                                                }}
+                                                                className="h-9 text-sm"
+                                                                min="0"
+                                                                max="100"
+                                                                step="0.01"
+                                                            />
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <Label className="text-xs">公司比例</Label>
+                                                            <Input
+                                                                type="number"
+                                                                value={(formData.unemployment.company_rate * 100).toFixed(2)}
+                                                                onChange={(e) => {
+                                                                    const value = parseFloat(e.target.value) / 100
+                                                                    if (!isNaN(value) && value >= 0 && value <= 1) {
+                                                                        setFormData({
+                                                                            ...formData,
+                                                                            unemployment: { ...formData.unemployment, company_rate: value },
+                                                                        })
+                                                                    }
+                                                                }}
+                                                                className="h-9 text-sm"
+                                                                min="0"
+                                                                max="100"
+                                                                step="0.01"
+                                                            />
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </TabsContent>
                                             <TabsContent value="injury" className="space-y-2 mt-3">
-                                                <div className="grid grid-cols-2 gap-2">
-                                                    <div className="space-y-1">
-                                                        <Label className="text-xs">个人比例（%）</Label>
-                                                        <Input
-                                                            type="number"
-                                                            value={(formData.injury.personal_rate * 100).toFixed(2)}
-                                                            onChange={(e) => {
-                                                                const value = parseFloat(e.target.value) / 100
-                                                                if (!isNaN(value) && value >= 0 && value <= 1) {
-                                                                    setFormData({
-                                                                        ...formData,
-                                                                        injury: { ...formData.injury, personal_rate: value },
-                                                                    })
-                                                                }
-                                                            }}
-                                                            className="h-9 text-sm"
-                                                            min="0"
-                                                            max="100"
-                                                            step="0.01"
-                                                        />
+                                                <div className="space-y-3">
+                                                    <Label className="text-xs font-semibold text-blue-600 dark:text-blue-400">缴费基数范围（元）</Label>
+                                                    <div className="grid grid-cols-2 gap-2">
+                                                        <div className="space-y-1">
+                                                            <Label className="text-xs">下限</Label>
+                                                            <Input
+                                                                type="number"
+                                                                value={formData.injury.base_lower}
+                                                                onChange={(e) => {
+                                                                    const value = parseFloat(e.target.value)
+                                                                    if (!isNaN(value) && value >= 0) {
+                                                                        setFormData({
+                                                                            ...formData,
+                                                                            injury: { ...formData.injury, base_lower: value },
+                                                                        })
+                                                                    }
+                                                                }}
+                                                                className="h-9 text-sm"
+                                                                min="0"
+                                                                step="1"
+                                                            />
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <Label className="text-xs">上限</Label>
+                                                            <Input
+                                                                type="number"
+                                                                value={formData.injury.base_upper}
+                                                                onChange={(e) => {
+                                                                    const value = parseFloat(e.target.value)
+                                                                    if (!isNaN(value) && value >= 0) {
+                                                                        setFormData({
+                                                                            ...formData,
+                                                                            injury: { ...formData.injury, base_upper: value },
+                                                                        })
+                                                                    }
+                                                                }}
+                                                                className="h-9 text-sm"
+                                                                min="0"
+                                                                step="1"
+                                                            />
+                                                        </div>
                                                     </div>
-                                                    <div className="space-y-1">
-                                                        <Label className="text-xs">公司比例（%）</Label>
-                                                        <Input
-                                                            type="number"
-                                                            value={(formData.injury.company_rate * 100).toFixed(2)}
-                                                            onChange={(e) => {
-                                                                const value = parseFloat(e.target.value) / 100
-                                                                if (!isNaN(value) && value >= 0 && value <= 1) {
-                                                                    setFormData({
-                                                                        ...formData,
-                                                                        injury: { ...formData.injury, company_rate: value },
-                                                                    })
-                                                                }
-                                                            }}
-                                                            className="h-9 text-sm"
-                                                            min="0"
-                                                            max="100"
-                                                            step="0.01"
-                                                        />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label className="text-xs font-semibold text-blue-600 dark:text-blue-400">缴费比例（%）</Label>
+                                                    <div className="grid grid-cols-2 gap-2">
+                                                        <div className="space-y-1">
+                                                            <Label className="text-xs">个人比例</Label>
+                                                            <Input
+                                                                type="number"
+                                                                value={(formData.injury.personal_rate * 100).toFixed(2)}
+                                                                onChange={(e) => {
+                                                                    const value = parseFloat(e.target.value) / 100
+                                                                    if (!isNaN(value) && value >= 0 && value <= 1) {
+                                                                        setFormData({
+                                                                            ...formData,
+                                                                            injury: { ...formData.injury, personal_rate: value },
+                                                                        })
+                                                                    }
+                                                                }}
+                                                                className="h-9 text-sm"
+                                                                min="0"
+                                                                max="100"
+                                                                step="0.01"
+                                                            />
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <Label className="text-xs">公司比例</Label>
+                                                            <Input
+                                                                type="number"
+                                                                value={(formData.injury.company_rate * 100).toFixed(2)}
+                                                                onChange={(e) => {
+                                                                    const value = parseFloat(e.target.value) / 100
+                                                                    if (!isNaN(value) && value >= 0 && value <= 1) {
+                                                                        setFormData({
+                                                                            ...formData,
+                                                                            injury: { ...formData.injury, company_rate: value },
+                                                                        })
+                                                                    }
+                                                                }}
+                                                                className="h-9 text-sm"
+                                                                min="0"
+                                                                max="100"
+                                                                step="0.01"
+                                                            />
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </TabsContent>
                                             <TabsContent value="maternity" className="space-y-2 mt-3">
-                                                <div className="grid grid-cols-2 gap-2">
-                                                    <div className="space-y-1">
-                                                        <Label className="text-xs">个人比例（%）</Label>
-                                                        <Input
-                                                            type="number"
-                                                            value={(formData.maternity.personal_rate * 100).toFixed(2)}
-                                                            onChange={(e) => {
-                                                                const value = parseFloat(e.target.value) / 100
-                                                                if (!isNaN(value) && value >= 0 && value <= 1) {
-                                                                    setFormData({
-                                                                        ...formData,
-                                                                        maternity: { ...formData.maternity, personal_rate: value },
-                                                                    })
-                                                                }
-                                                            }}
-                                                            className="h-9 text-sm"
-                                                            min="0"
-                                                            max="100"
-                                                            step="0.01"
-                                                        />
+                                                <div className="space-y-3">
+                                                    <Label className="text-xs font-semibold text-blue-600 dark:text-blue-400">缴费基数范围（元）</Label>
+                                                    <div className="grid grid-cols-2 gap-2">
+                                                        <div className="space-y-1">
+                                                            <Label className="text-xs">下限</Label>
+                                                            <Input
+                                                                type="number"
+                                                                value={formData.maternity.base_lower}
+                                                                onChange={(e) => {
+                                                                    const value = parseFloat(e.target.value)
+                                                                    if (!isNaN(value) && value >= 0) {
+                                                                        setFormData({
+                                                                            ...formData,
+                                                                            maternity: { ...formData.maternity, base_lower: value },
+                                                                        })
+                                                                    }
+                                                                }}
+                                                                className="h-9 text-sm"
+                                                                min="0"
+                                                                step="1"
+                                                            />
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <Label className="text-xs">上限</Label>
+                                                            <Input
+                                                                type="number"
+                                                                value={formData.maternity.base_upper}
+                                                                onChange={(e) => {
+                                                                    const value = parseFloat(e.target.value)
+                                                                    if (!isNaN(value) && value >= 0) {
+                                                                        setFormData({
+                                                                            ...formData,
+                                                                            maternity: { ...formData.maternity, base_upper: value },
+                                                                        })
+                                                                    }
+                                                                }}
+                                                                className="h-9 text-sm"
+                                                                min="0"
+                                                                step="1"
+                                                            />
+                                                        </div>
                                                     </div>
-                                                    <div className="space-y-1">
-                                                        <Label className="text-xs">公司比例（%）</Label>
-                                                        <Input
-                                                            type="number"
-                                                            value={(formData.maternity.company_rate * 100).toFixed(2)}
-                                                            onChange={(e) => {
-                                                                const value = parseFloat(e.target.value) / 100
-                                                                if (!isNaN(value) && value >= 0 && value <= 1) {
-                                                                    setFormData({
-                                                                        ...formData,
-                                                                        maternity: { ...formData.maternity, company_rate: value },
-                                                                    })
-                                                                }
-                                                            }}
-                                                            className="h-9 text-sm"
-                                                            min="0"
-                                                            max="100"
-                                                            step="0.01"
-                                                        />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label className="text-xs font-semibold text-blue-600 dark:text-blue-400">缴费比例（%）</Label>
+                                                    <div className="grid grid-cols-2 gap-2">
+                                                        <div className="space-y-1">
+                                                            <Label className="text-xs">个人比例</Label>
+                                                            <Input
+                                                                type="number"
+                                                                value={(formData.maternity.personal_rate * 100).toFixed(2)}
+                                                                onChange={(e) => {
+                                                                    const value = parseFloat(e.target.value) / 100
+                                                                    if (!isNaN(value) && value >= 0 && value <= 1) {
+                                                                        setFormData({
+                                                                            ...formData,
+                                                                            maternity: { ...formData.maternity, personal_rate: value },
+                                                                        })
+                                                                    }
+                                                                }}
+                                                                className="h-9 text-sm"
+                                                                min="0"
+                                                                max="100"
+                                                                step="0.01"
+                                                            />
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <Label className="text-xs">公司比例</Label>
+                                                            <Input
+                                                                type="number"
+                                                                value={(formData.maternity.company_rate * 100).toFixed(2)}
+                                                                onChange={(e) => {
+                                                                    const value = parseFloat(e.target.value) / 100
+                                                                    if (!isNaN(value) && value >= 0 && value <= 1) {
+                                                                        setFormData({
+                                                                            ...formData,
+                                                                            maternity: { ...formData.maternity, company_rate: value },
+                                                                        })
+                                                                    }
+                                                                }}
+                                                                className="h-9 text-sm"
+                                                                min="0"
+                                                                max="100"
+                                                                step="0.01"
+                                                            />
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </TabsContent>
                                             <TabsContent value="housing_fund" className="space-y-2 mt-3">
-                                                <div className="grid grid-cols-2 gap-2">
-                                                    <div className="space-y-1">
-                                                        <Label className="text-xs">个人比例（%）</Label>
-                                                        <Input
-                                                            type="number"
-                                                            value={(formData.housing_fund.personal_rate * 100).toFixed(2)}
-                                                            onChange={(e) => {
-                                                                const value = parseFloat(e.target.value) / 100
-                                                                if (!isNaN(value) && value >= 0 && value <= 1) {
-                                                                    setFormData({
-                                                                        ...formData,
-                                                                        housing_fund: { ...formData.housing_fund, personal_rate: value },
-                                                                    })
-                                                                }
-                                                            }}
-                                                            className="h-9 text-sm"
-                                                            min="0"
-                                                            max="100"
-                                                            step="0.01"
-                                                        />
+                                                <div className="space-y-3">
+                                                    <Label className="text-xs font-semibold text-blue-600 dark:text-blue-400">缴费基数范围（元）</Label>
+                                                    <div className="grid grid-cols-2 gap-2">
+                                                        <div className="space-y-1">
+                                                            <Label className="text-xs">下限</Label>
+                                                            <Input
+                                                                type="number"
+                                                                value={formData.housing_fund.base_lower}
+                                                                onChange={(e) => {
+                                                                    const value = parseFloat(e.target.value)
+                                                                    if (!isNaN(value) && value >= 0) {
+                                                                        setFormData({
+                                                                            ...formData,
+                                                                            housing_fund: { ...formData.housing_fund, base_lower: value },
+                                                                        })
+                                                                    }
+                                                                }}
+                                                                className="h-9 text-sm"
+                                                                min="0"
+                                                                step="1"
+                                                            />
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <Label className="text-xs">上限</Label>
+                                                            <Input
+                                                                type="number"
+                                                                value={formData.housing_fund.base_upper}
+                                                                onChange={(e) => {
+                                                                    const value = parseFloat(e.target.value)
+                                                                    if (!isNaN(value) && value >= 0) {
+                                                                        setFormData({
+                                                                            ...formData,
+                                                                            housing_fund: { ...formData.housing_fund, base_upper: value },
+                                                                        })
+                                                                    }
+                                                                }}
+                                                                className="h-9 text-sm"
+                                                                min="0"
+                                                                step="1"
+                                                            />
+                                                        </div>
                                                     </div>
-                                                    <div className="space-y-1">
-                                                        <Label className="text-xs">公司比例（%）</Label>
-                                                        <Input
-                                                            type="number"
-                                                            value={(formData.housing_fund.company_rate * 100).toFixed(2)}
-                                                            onChange={(e) => {
-                                                                const value = parseFloat(e.target.value) / 100
-                                                                if (!isNaN(value) && value >= 0 && value <= 1) {
-                                                                    setFormData({
-                                                                        ...formData,
-                                                                        housing_fund: { ...formData.housing_fund, company_rate: value },
-                                                                    })
-                                                                }
-                                                            }}
-                                                            className="h-9 text-sm"
-                                                            min="0"
-                                                            max="100"
-                                                            step="0.01"
-                                                        />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label className="text-xs font-semibold text-blue-600 dark:text-blue-400">缴费比例（%）</Label>
+                                                    <div className="grid grid-cols-2 gap-2">
+                                                        <div className="space-y-1">
+                                                            <Label className="text-xs">个人比例</Label>
+                                                            <Input
+                                                                type="number"
+                                                                value={(formData.housing_fund.personal_rate * 100).toFixed(2)}
+                                                                onChange={(e) => {
+                                                                    const value = parseFloat(e.target.value) / 100
+                                                                    if (!isNaN(value) && value >= 0 && value <= 1) {
+                                                                        setFormData({
+                                                                            ...formData,
+                                                                            housing_fund: { ...formData.housing_fund, personal_rate: value },
+                                                                        })
+                                                                    }
+                                                                }}
+                                                                className="h-9 text-sm"
+                                                                min="0"
+                                                                max="100"
+                                                                step="0.01"
+                                                            />
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <Label className="text-xs">公司比例</Label>
+                                                            <Input
+                                                                type="number"
+                                                                value={(formData.housing_fund.company_rate * 100).toFixed(2)}
+                                                                onChange={(e) => {
+                                                                    const value = parseFloat(e.target.value) / 100
+                                                                    if (!isNaN(value) && value >= 0 && value <= 1) {
+                                                                        setFormData({
+                                                                            ...formData,
+                                                                            housing_fund: { ...formData.housing_fund, company_rate: value },
+                                                                        })
+                                                                    }
+                                                                }}
+                                                                className="h-9 text-sm"
+                                                                min="0"
+                                                                max="100"
+                                                                step="0.01"
+                                                            />
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </TabsContent>

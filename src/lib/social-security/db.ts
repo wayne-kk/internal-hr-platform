@@ -10,6 +10,42 @@ export async function getCityConfigFromDB(city: string): Promise<CityConfig | nu
                 city,
                 is_active: true,
             },
+            select: {
+                id: true,
+                city: true,
+                base_lower: true,
+                base_upper: true,
+                housing_fund_base_lower: true,
+                housing_fund_base_upper: true,
+                pension_personal_rate: true,
+                pension_company_rate: true,
+                pension_base_lower: true,
+                pension_base_upper: true,
+                medical_personal_rate: true,
+                medical_company_rate: true,
+                medical_personal_fixed: true,
+                medical_company_fixed: true,
+                medical_base_lower: true,
+                medical_base_upper: true,
+                unemployment_personal_rate: true,
+                unemployment_company_rate: true,
+                unemployment_base_lower: true,
+                unemployment_base_upper: true,
+                injury_personal_rate: true,
+                injury_company_rate: true,
+                injury_base_lower: true,
+                injury_base_upper: true,
+                maternity_personal_rate: true,
+                maternity_company_rate: true,
+                maternity_base_lower: true,
+                maternity_base_upper: true,
+                housing_fund_personal_rate: true,
+                housing_fund_company_rate: true,
+                housing_fund_base_lower_new: true,
+                housing_fund_base_upper_new: true,
+                housing_fund_protection_enabled: true,
+                version: true,
+            },
         })
 
         if (!data) {
@@ -24,27 +60,40 @@ export async function getCityConfigFromDB(city: string): Promise<CityConfig | nu
             pension: {
                 personal_rate: Number(data.pension_personal_rate),
                 company_rate: Number(data.pension_company_rate),
+                base_lower: Number(data.pension_base_lower ?? data.base_lower),
+                base_upper: Number(data.pension_base_upper ?? data.base_upper),
             },
             medical: {
                 personal_rate: Number(data.medical_personal_rate),
                 company_rate: Number(data.medical_company_rate),
                 personal_fixed: Number(data.medical_personal_fixed || 0),
+                company_fixed: Number(data.medical_company_fixed || 0),
+                base_lower: Number(data.medical_base_lower ?? data.base_lower),
+                base_upper: Number(data.medical_base_upper ?? data.base_upper),
             },
             unemployment: {
                 personal_rate: Number(data.unemployment_personal_rate),
                 company_rate: Number(data.unemployment_company_rate),
+                base_lower: Number(data.unemployment_base_lower ?? data.base_lower),
+                base_upper: Number(data.unemployment_base_upper ?? data.base_upper),
             },
             injury: {
                 personal_rate: Number(data.injury_personal_rate),
                 company_rate: Number(data.injury_company_rate),
+                base_lower: Number(data.injury_base_lower ?? data.base_lower),
+                base_upper: Number(data.injury_base_upper ?? data.base_upper),
             },
             maternity: {
                 personal_rate: Number(data.maternity_personal_rate),
                 company_rate: Number(data.maternity_company_rate),
+                base_lower: Number(data.maternity_base_lower ?? data.base_lower),
+                base_upper: Number(data.maternity_base_upper ?? data.base_upper),
             },
             housing_fund: {
                 personal_rate: Number(data.housing_fund_personal_rate),
                 company_rate: Number(data.housing_fund_company_rate),
+                base_lower: Number(data.housing_fund_base_lower_new ?? data.housing_fund_base_lower),
+                base_upper: Number(data.housing_fund_base_upper_new ?? data.housing_fund_base_upper),
             },
             housing_fund_protection_enabled: data.housing_fund_protection_enabled ?? false,
         }
@@ -90,6 +139,25 @@ export async function saveCityConfigToDB(
         if (config.housing_fund_base_lower >= config.housing_fund_base_upper) {
             return { success: false, error: "公积金缴费基数下限必须小于上限" }
         }
+        // 验证各险种的上下限
+        if (config.pension.base_lower >= config.pension.base_upper) {
+            return { success: false, error: "养老保险缴费基数下限必须小于上限" }
+        }
+        if (config.medical.base_lower >= config.medical.base_upper) {
+            return { success: false, error: "医疗保险缴费基数下限必须小于上限" }
+        }
+        if (config.unemployment.base_lower >= config.unemployment.base_upper) {
+            return { success: false, error: "失业保险缴费基数下限必须小于上限" }
+        }
+        if (config.injury.base_lower >= config.injury.base_upper) {
+            return { success: false, error: "工伤保险缴费基数下限必须小于上限" }
+        }
+        if (config.maternity.base_lower >= config.maternity.base_upper) {
+            return { success: false, error: "生育保险缴费基数下限必须小于上限" }
+        }
+        if (config.housing_fund.base_lower >= config.housing_fund.base_upper) {
+            return { success: false, error: "公积金缴费基数下限必须小于上限" }
+        }
 
         // 使用 upsert 来创建或更新
         const existing = await prisma.socialSecurityConfig.findUnique({
@@ -104,18 +172,30 @@ export async function saveCityConfigToDB(
             housing_fund_base_upper: config.housing_fund_base_upper,
             pension_personal_rate: config.pension.personal_rate,
             pension_company_rate: config.pension.company_rate,
+            pension_base_lower: config.pension.base_lower,
+            pension_base_upper: config.pension.base_upper,
             medical_personal_rate: config.medical.personal_rate,
             medical_company_rate: config.medical.company_rate,
             medical_personal_fixed: config.medical.personal_fixed || 0,
-            medical_company_fixed: 0, // 公司部分不加固定金额
+            medical_company_fixed: config.medical.company_fixed || 0,
+            medical_base_lower: config.medical.base_lower,
+            medical_base_upper: config.medical.base_upper,
             unemployment_personal_rate: config.unemployment.personal_rate,
             unemployment_company_rate: config.unemployment.company_rate,
+            unemployment_base_lower: config.unemployment.base_lower,
+            unemployment_base_upper: config.unemployment.base_upper,
             injury_personal_rate: config.injury.personal_rate,
             injury_company_rate: config.injury.company_rate,
+            injury_base_lower: config.injury.base_lower,
+            injury_base_upper: config.injury.base_upper,
             maternity_personal_rate: config.maternity.personal_rate,
             maternity_company_rate: config.maternity.company_rate,
+            maternity_base_lower: config.maternity.base_lower,
+            maternity_base_upper: config.maternity.base_upper,
             housing_fund_personal_rate: config.housing_fund.personal_rate,
             housing_fund_company_rate: config.housing_fund.company_rate,
+            housing_fund_base_lower_new: config.housing_fund.base_lower,
+            housing_fund_base_upper_new: config.housing_fund.base_upper,
             housing_fund_protection_enabled: config.housing_fund_protection_enabled ?? false,
         }
 
@@ -161,7 +241,7 @@ export async function getAllConfigsFromDB(): Promise<
             },
         })
 
-        return data.map((row) => ({
+        return data.map((row: any) => ({
             id: row.id,
             city: row.city,
             config: {
@@ -172,27 +252,40 @@ export async function getAllConfigsFromDB(): Promise<
                 pension: {
                     personal_rate: Number(row.pension_personal_rate),
                     company_rate: Number(row.pension_company_rate),
+                    base_lower: Number(row.pension_base_lower ?? row.base_lower),
+                    base_upper: Number(row.pension_base_upper ?? row.base_upper),
                 },
                 medical: {
                     personal_rate: Number(row.medical_personal_rate),
                     company_rate: Number(row.medical_company_rate),
                     personal_fixed: Number(row.medical_personal_fixed || 0),
+                    company_fixed: Number(row.medical_company_fixed || 0),
+                    base_lower: Number(row.medical_base_lower ?? row.base_lower),
+                    base_upper: Number(row.medical_base_upper ?? row.base_upper),
                 },
                 unemployment: {
                     personal_rate: Number(row.unemployment_personal_rate),
                     company_rate: Number(row.unemployment_company_rate),
+                    base_lower: Number(row.unemployment_base_lower ?? row.base_lower),
+                    base_upper: Number(row.unemployment_base_upper ?? row.base_upper),
                 },
                 injury: {
                     personal_rate: Number(row.injury_personal_rate),
                     company_rate: Number(row.injury_company_rate),
+                    base_lower: Number(row.injury_base_lower ?? row.base_lower),
+                    base_upper: Number(row.injury_base_upper ?? row.base_upper),
                 },
                 maternity: {
                     personal_rate: Number(row.maternity_personal_rate),
                     company_rate: Number(row.maternity_company_rate),
+                    base_lower: Number(row.maternity_base_lower ?? row.base_lower),
+                    base_upper: Number(row.maternity_base_upper ?? row.base_upper),
                 },
                 housing_fund: {
                     personal_rate: Number(row.housing_fund_personal_rate),
                     company_rate: Number(row.housing_fund_company_rate),
+                    base_lower: Number(row.housing_fund_base_lower_new ?? row.housing_fund_base_lower),
+                    base_upper: Number(row.housing_fund_base_upper_new ?? row.housing_fund_base_upper),
                 },
                 housing_fund_protection_enabled: row.housing_fund_protection_enabled ?? false,
             },
